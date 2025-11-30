@@ -1,69 +1,252 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Proxy Top 2025 (Có Tiếng Siêu Mượt)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Thiệp 20/11 + YouTube Không Quảng Cáo</title>
   <style>
-    body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
-    input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:#fff;margin:15px 0;}
-    #info {background:#111;padding:20px;border-radius:12px;}
-    #player {width:100%;height:60vh;border-radius:12px;background:#000;border:none;}
-    img {width:100%;border-radius:12px;margin-top:15px;}
-    h1 {text-align:center;color:#ff6b6b;}
-    #loading {text-align:center;color:#aaa;}
-    .fallback {color:#4a90e2;text-align:center;}
+    body { margin:0; overflow:hidden; background:#000; touch-action:none; }
+    #info { position:absolute; top:10px; left:10px; color:#fff; padding:10px 15px;
+            background:rgba(0,0,0,0.7); border-radius:8px; font-family:Arial;
+            pointer-events:none; z-index:100; font-size:14px; }
+    #flash { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; opacity:0;
+              pointer-events:none; transition:opacity 2.8s ease-out; z-index:9998; }
+    #card {
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+      width:90%; max-width:520px; padding:40px 20px; box-sizing:border-box;
+      background:linear-gradient(135deg,#120428,#0c1e3d);
+      color:#fff; text-align:center; font-family:'Segoe UI',Arial,sans-serif;
+      border-radius:25px; box-shadow:0 0 80px rgba(0,255,255,0.6);
+      border:4px solid rgba(0,255,255,0.7); z-index:9999; opacity:0;
+      transition:all 1.8s cubic-bezier(0.25,0.8,0.25,1);
+    }
+    #card.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
+    #card h1 { font-size:42px; margin:0 0 20px;
+               background:linear-gradient(90deg,#00ffff,#ff00ff);
+               -webkit-background-clip:text; color:transparent; }
+    #card p { font-size:20px; line-height:1.6; margin:15px 0; }
+
+    /* YouTube Section */
+    #youtubeSection { margin-top:50px; }
+    #youtubeSection h2 { font-size:28px; margin:20px 0; color:#00ffff; }
+    #ytInput { width:100%; padding:16px; font-size:18px; border:none; border-radius:12px;
+               background:#222; color:#fff; margin:15px 0 20px; box-sizing:border-box; }
+    #ytPlayer { width:100%; height:55vh; border-radius:16px; border:none; background:#000; }
+    .note { font-size:14px; color:#aaa; margin-top:10px; }
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo (Proxy Embed Top 2025)</h1>
-  <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy free no ads)</div></div>
-  <iframe id="player" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+  <div id="info">Chạm hoặc bấm vào Trái Đất để mở thiệp bí mật!</div>
+  <div id="flash"></div>
+
+  <div id="card">
+    <h1>Chúc Mừng Ngày Phụ Nữ Việt Nam 20/11!</h1>
+    <p>Chúc chị ngày 20/11 thật nhiều niềm vui,<br>sức khỏe dồi dào, hạnh phúc ngập tràn! (dù hôm nay đã qua rồi =)) )</p>
+    <p style="margin-top:40px; color:#00ffff; font-size:18px;">Từ anh/em/người thương </p>
+
+    <div id="youtubeSection">
+      <h2>YouTube Không Quảng Cáo</h2>
+      <input type="text" id="ytInput" placeholder="Dán link YouTube vào đây rồi Enter...">
+      <iframe id="ytPlayer" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share"></iframe>
+      <p class="note">Có tiếng • Không quảng cáo • Shorts & Live OK • Dùng mãi mãi</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
-    const input = document.getElementById("url");
-    const info = document.getElementById("info");
-    const player = document.getElementById("player");
+    // ============== 3D VŨ TRỤ HOÀN CHỈNH ==============
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.05; controls.enablePan = false;
+    camera.position.set(0, 600, 1800);
 
-    input.addEventListener("change", () => {
-      let url = input.value.trim();
-      if (!url) return;
+    // Stars
+    const starGeo = new THREE.BufferGeometry();
+    const vertices = [];
+    for(let i=0;i<40000;i++) vertices.push(THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000));
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:true,transparent:true,opacity:0.9})));
 
-      const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
-      if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
+    // Nebula
+    const nebulaGroup = new THREE.Group(); scene.add(nebulaGroup);
+    for(let l=0;l<3;l++){
+      const size = 2500 + l*1000;
+      const mat = new THREE.ShaderMaterial({
+        uniforms:{time:{value:0},layer:{value:l}},
+        vertexShader:`varying vec3 vPos;void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+        fragmentShader:`
+          uniform float time;uniform float layer;varying vec3 vPos;
+          float hash(vec3 p){return fract(sin(dot(p,vec3(7,157,113)))*43758.5453);}
+          float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+            return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),
+                       mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
+          void main(){
+            vec3 p=vPos*0.001+vec3(time*0.015);
+            float n=noise(p+layer*10.)+noise(p*2.+layer*15.)*0.5+noise(p*4.)*0.25;n/=1.75;
+            float d=smoothstep(0.35,0.7,n);
+            vec3 c=layer<1.?vec3(.5,0,1):layer<2.?vec3(0,.7,1):vec3(1,.3,.8);
+            gl_FragColor=vec4(c,d*0.22);
+          }`,
+        transparent:true,side:THREE.BackSide,depthWrite:false,blending:THREE.AdditiveBlending
+      });
+      const m=new THREE.Mesh(new THREE.SphereGeometry(size,80,80),mat);
+      m.rotation.y=Math.random()*Math.PI*2;
+      nebulaGroup.add(m);
+    }
 
-      const id = match[1];
-      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–4 giây)</p>";
+    // Sun
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(70,64,64), new THREE.MeshBasicMaterial({color:0xffee88}));
+    sun.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,32), new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0.6})));
+    scene.add(sun);
+    sun.add(new THREE.PointLight(0xffffff,3,6000));
 
-      // Proxy top 2025 (test 30/11/2025, ưu tiên SkipCut)
-      const proxyUrls = [
-        `https://skipcut.com/watch?v=${id}`,  // Proxy 1: SkipCut (no ads, official embed, có tiếng OK)
-        `https://proxysite.com/#/https://www.youtube.com/embed/${id}`,  // Proxy 2: Proxysite.com (simple, unblock mượt)
-        `https://4everproxy.com/?url=https://www.youtube.com/embed/${id}`,  // Proxy 3: 4everproxy (block ads/scripts)
-        `https://www.croxyproxy.com/embed.php?u=https://www.youtube.com/embed/${id}`  // Proxy 4: CroxyProxy (low bandwidth)
-      ];
+    // Planets + Trails + Moon
+    const planetData = [
+      {name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},
+      {name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
+      {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},
+      {name:"Mars",r:14,dist:550,color:0xff4444,period:18},
+      {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},
+      {name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
+      {name:"Uranus",r:28,dist:1700,color:0x87ceeb,period:29},
+      {name:"Neptune",r:27,dist:2100,color:0x4169e1,period:30}
+    ];
+    const trails = [];
+    let earthMesh = null;
+    planetData.forEach(p => {
+      const planet = new THREE.Mesh(new THREE.SphereGeometry(p.r,32,32), new THREE.MeshStandardMaterial({color:p.color,emissive:p.color,emissiveIntensity:0.5}));
+      const orbit = new THREE.Object3D();
+      orbit.add(planet);
+      planet.position.x = p.dist;
+      scene.add(orbit);
+      if(p.name==="Earth") earthMesh = planet;
 
-      let currentIndex = 0;
-      function loadProxy() {
-        const proxyUrl = proxyUrls[currentIndex];
-        player.src = proxyUrl;
-        info.innerHTML += `<p>Xem qua proxy: <a href="${proxyUrl}" target="_blank" class="fallback">Mở tab mới nếu lag</a></p>`;
+      if(p.name==="Saturn"){
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(p.r*1.7,p.r*0.4,16,120),
+          new THREE.MeshBasicMaterial({color:0xdeb887,side:THREE.DoubleSide,transparent:true,opacity:0.9}));
+        ring.rotation.x = Math.PI/2;
+        planet.add(ring);
       }
 
-      loadProxy();  // Load proxy đầu tiên
+      const trail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:p.color,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending}));
+      scene.add(trail);
+      trails.push({orbit,planet,trail,positions:[],maxPoints:500,period:p.period});
 
-      // Fallback tự động nếu error
-      player.addEventListener("error", () => {
-        if (currentIndex < proxyUrls.length - 1) {
-          currentIndex++;
-          info.innerHTML = "<p style='color:yellow'>Proxy trước lag, thử cái sau...</p>";
-          setTimeout(loadProxy, 3000);  // Chờ 3s trước khi thử
-        } else {
-          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử VPN free (ProtonVPN) hoặc NewPipe app nha!</p>";
-        }
-      });
+      if(p.name==="Earth"){
+        const moon = new THREE.Mesh(new THREE.SphereGeometry(6,24,24), new THREE.MeshStandardMaterial({color:0xdddddd,emissive:0xdddddd,emissiveIntensity:0.3}));
+        moon.position.x = 50;
+        planet.add(moon);
+        const moonTrail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0xaaaaaa,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending}));
+        scene.add(moonTrail);
+        trails.push({orbit:planet,planet:moon,trail:moonTrail,positions:[],maxPoints:300,period:2.5});
+      }
     });
+
+    // Shooting stars
+    const shootingStars = [];
+    function createShootingStar(){
+      const points = []; for(let i=0;i<200;i++) points.push(new THREE.Vector3());
+      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const mat = new THREE.PointsMaterial({color:0xccffff,size:20,sizeAttenuation:true,transparent:true,blending:THREE.AdditiveBlending});
+      const star = new THREE.Points(geo, mat);
+      scene.add(star);
+      const dir = new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize();
+      shootingStars.push({obj:star, pos:dir.clone().multiplyScalar(-5500), dir, speed:40+Math.random()*35, life:0, maxLife:160});
+    }
+    setInterval(()=>{ if(Math.random()<0.8) createShootingStar(); }, 3500);
+
+    // ============== BẤM VÀO TRÁI ĐẤT ==============
+    let triggered = false;
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onPointer(event) {
+      if (triggered || !earthMesh) return;
+      const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      mouse.x = (clientX / innerWidth) * 2 - 1;
+      mouse.y = -(clientY / innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObject(earthMesh, true);
+      if (hits.length > 0) {
+        triggered = true;
+        document.getElementById('flash').style.opacity = 1;
+        setTimeout(() => {
+          document.getElementById('flash').style.opacity = 0;
+          renderer.domElement.style.transition = 'opacity 1.5s';
+          renderer.domElement.style.opacity = 0;
+          document.getElementById('card').classList.add('show');
+        }, 2800);
+      }
+    }
+    window.addEventListener('click', onPointer);
+    window.addEventListener('touchstart', onPointer);
+
+    // ============== YOUTUBE KHÔNG QUẢNG CÁO ==============
+    const ytInput = document.getElementById("ytInput");
+    const ytPlayer = document.getElementById("ytPlayer");
+
+    ytInput.addEventListener("change", () => {
+      let url = ytInput.value.trim();
+      if (!url) return;
+      const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
+      if (!match) return alert("Link YouTube không hợp lệ nha!");
+
+      const id = match[1];
+      const proxyUrls = [
+        `https://skipcut.com/watch?v=${id}`,
+        `https://proxysite.com/#/https://www.youtube.com/embed/${id}`,
+        `https://4everproxy.com/?url=https://www.youtube.com/embed/${id}`,
+        `https://www.croxyproxy.com/embed.php?u=https://www.youtube.com/embed/${id}`
+      ];
+
+      let idx = 0;
+      function load() { ytPlayer.src = proxyUrls[idx]; }
+      load();
+
+      ytPlayer.onerror = ytPlayer.onload = () => {
+        if (idx < proxyUrls.length-1) { idx++; setTimeout(load, 2000); }
+      };
+    });
+
+    // ============== ANIMATION ==============
+    function animate(){
+      if(triggered) return;
+      requestAnimationFrame(animate);
+      trails.forEach(t => {
+        t.orbit.rotation.y += (Math.PI*2)/(t.period*60);
+        const pos = t.planet.getWorldPosition(new THREE.Vector3());
+        t.positions.push(pos.x,pos.y,pos.z);
+        if(t.positions.length > t.maxPoints*3) t.positions.splice(0,3);
+        t.trail.geometry.setAttribute('position', new THREE.Float32BufferAttribute(t.positions,3));
+      });
+      shootingStars.forEach((s,i) => {
+        s.life++;
+        const pos = s.obj.geometry.attributes.position.array;
+        for(let j=0; j<pos.length; j+=3){
+          const prog = j/3/(pos.length/3-1);
+          const v = s.pos.clone().addScaledVector(s.dir, (s.life - prog*160)*s.speed);
+          pos[j]=v.x; pos[j+1]=v.y; pos[j+2]=v.z;
+        }
+        s.obj.geometry.attributes.position.needsUpdate = true;
+        s.obj.material.opacity = Math.max(0, 1 - s.life/s.maxLife);
+        if(s.life > s.maxLife){ scene.remove(s.obj); shootingStars.splice(i,1); }
+      });
+      sun.rotation.y += 0.006;
+      nebulaGroup.children.forEach((n,i)=>{ n.material.uniforms.time.value=performance.now()*0.001; n.rotation.y+=0.00004*(i+1); });
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
   </script>
 </body>
 </html>
