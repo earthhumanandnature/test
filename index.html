@@ -12,6 +12,8 @@
             pointer-events:none; z-index:100; font-size:14px; }
     #flash { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; opacity:0;
               pointer-events:none; transition:opacity 2.8s ease-out; z-index:9998; }
+
+    /* Card + hiệu ứng phồng cho mọi thứ bên trong */
     #card {
       position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
       width:90%; max-width:520px; padding:40px 20px; box-sizing:border-box;
@@ -22,22 +24,30 @@
       transition:all 1.8s cubic-bezier(0.25,0.8,0.25,1); overflow-y:auto; max-height:95vh;
     }
     #card.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
-    #card h1 { font-size:42px; margin:0 0 20px;
-               background:linear-gradient(90deg,#00ffff,#ff00ff);
-               -webkit-background-clip:text; color:transparent; }
+
+    #card h1, #card h2, #ytInput, #backBtn, #ytPlayer, .note {
+      transition:transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    #card h1:hover, #card h2:hover, #ytInput:hover, #backBtn:hover,
+    #ytInput:focus, #backBtn.touched, #ytPlayer:hover {
+      transform:scale(1.08);
+      box-shadow:0 0 30px rgba(0,255,255,0.8);
+    }
     #backBtn {
       margin:50px auto 20px; padding:16px 45px; font-size:21px; font-weight:bold;
       background:linear-gradient(45deg,#ff00ff,#00ffff); color:#000;
       border:none; border-radius:50px; box-shadow:0 0 30px rgba(0,255,255,0.9);
-      cursor:pointer; transition:0.3s; display:block;
+      cursor:pointer; display:block;
     }
-    #backBtn:hover { transform:scale(1.15); }
+    #card h1 { font-size:42px; margin:0 0 20px;
+               background:linear-gradient(90deg,#00ffff,#ff00ff);
+               -webkit-background-clip:text; color:transparent; }
     #youtubeSection { margin-top:40px; }
     #youtubeSection h2 { font-size:28px; margin:20px 0 10px; color:#ff79c6; }
     #ytInput { width:100%; padding:16px; font-size:18px; border:none; border-radius:12px;
                background:#222; color:#fff; margin:15px 0 20px; box-sizing:border-box; }
-    #ytPlayer { width:100%; height:56vh; border-radius:16px; border:none; background:#000; }
-    .note { font-size:14px; color:#aaa; margin-top:8px; }
+    #ytPlayer { width:100%; height:56vh; border-radius:16px; border:none; background:#000; margin-top:10px; }
+    .note { font-size:14px; color:#aaa; margin-top:8px; display:inline-block; }
   </style>
 </head>
 <body>
@@ -58,7 +68,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
   <script>
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
@@ -73,9 +82,10 @@
 
     let earthMesh = null;
     let inCard = false;
-
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    const hoverableObjects = [];   // các object 3D sẽ phồng khi hover
+    let hoveredObject = null;
 
     // Stars
     const starGeo = new THREE.BufferGeometry();
@@ -112,29 +122,46 @@
     // Sun
     const sun = new THREE.Mesh(new THREE.SphereGeometry(70,64,64), new THREE.MeshBasicMaterial({color:0xffee88}));
     sun.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,32), new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0.6})));
-    scene.add(sun); sun.add(new THREE.PointLight(0xffffff,3,6000));
+    scene.add(sun);
+    sun.add(new THREE.PointLight(0xffffff,3,6000));
+    hoverableObjects.push(sun);
 
-    // Planets + Moon + Trails
-    const planetData = [{name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},{name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
-      {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},{name:"Mars",r:14,dist:550,color:0xff4444,period:18},
-      {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},{name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
-      {name:"Uranus",r:28,dist:1700,color:0x87ceeb,period:29},{name:"Neptune",r:27,dist:2100,color:0x4169e1,period:30}];
+    // Planets
+    const planetData = [
+      {name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},
+      {name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
+      {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},
+      {name:"Mars",r:14,dist:550,color:0xff4444,period:18},
+      {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},
+      {name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
+      {name:"Uranus",r:28,dist:1700,color:0x87ceeb,period:29},
+      {name:"Neptune",r:27,dist:2100,color:0x4169e1,period:30}
+    ];
+
     const trails = [];
     planetData.forEach(p => {
       const planet = new THREE.Mesh(new THREE.SphereGeometry(p.r,32,32), new THREE.MeshStandardMaterial({color:p.color,emissive:p.color,emissiveIntensity:0.5}));
       const orbit = new THREE.Object3D(); orbit.add(planet); planet.position.x = p.dist; scene.add(orbit);
       if(p.name==="Earth") earthMesh = planet;
+
+      hoverableObjects.push(planet);
+
       if(p.name==="Saturn"){
         const ring = new THREE.Mesh(new THREE.TorusGeometry(p.r*1.7,p.r*0.4,16,120),
           new THREE.MeshBasicMaterial({color:0xdeb887,side:THREE.DoubleSide,transparent:true,opacity:0.9}));
         ring.rotation.x = Math.PI/2; planet.add(ring);
+        hoverableObjects.push(ring);
       }
+
       const trail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:p.color,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending}));
       scene.add(trail);
       trails.push({orbit,planet,trail,positions:[],maxPoints:500,period:p.period});
+
       if(p.name==="Earth"){
         const moon = new THREE.Mesh(new THREE.SphereGeometry(6,24,24), new THREE.MeshStandardMaterial({color:0xdddddd,emissive:0xdddddd,emissiveIntensity:0.3}));
         moon.position.x = 50; planet.add(moon);
+        hoverableObjects.push(moon);
+
         const moonTrail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0xaaaaaa,transparent:true,opacity:0.5,blending:THREE.AdditiveBlending}));
         scene.add(moonTrail);
         trails.push({orbit:planet,planet:moon,trail:moonTrail,positions:[],maxPoints:300,period:2.5});
@@ -153,7 +180,43 @@
     }
     setInterval(()=>{ if(Math.random()<0.85) createShootingStar(); }, 3000);
 
-    // MỞ & ĐÓNG THIỆP
+    // === HOVER 3D OBJECTS (hành tinh, mặt trời, mặt trăng...) ===
+    function onPointerMove(e) {
+      if(inCard) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      mouse.x = (clientX / innerWidth) * 2 - 1;
+      mouse.y = -(clientY / innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(hoverableObjects, true);
+
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (hoveredObject !== obj) {
+          if (hoveredObject) hoveredObject.scale.set(1,1,1);
+          hoveredObject = obj;
+          hoveredObject.scale.set(1.18,1.18,1.18);
+        }
+      } else {
+        if (hoveredObject) {
+          hoveredObject.scale.set(1,1,1);
+          hoveredObject = null;
+        }
+      }
+    }
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove);
+    window.addEventListener('mouseout', () => {
+      if (hoveredObject) { hoveredObject.scale.set(1,1,1); hoveredObject = null; }
+    });
+
+    // === TOUCH NÚT QUAY LẠI TRONG CARD (mobile) ===
+    const backBtn = document.getElementById('backBtn');
+    backBtn.addEventListener('touchstart', () => backBtn.classList.add('touched'));
+    backBtn.addEventListener('touchend', () => backBtn.classList.remove('touched'));
+    backBtn.addEventListener('touchcancel', () => backBtn.classList.remove('touched'));
+
+    // === MỞ & ĐÓNG CARD ===
     function openCard(){
       inCard = true;
       document.getElementById('flash').style.opacity = 1;
@@ -175,7 +238,7 @@
       }, 2800);
     }
 
-    // Bấm Trái Đất
+    // Click/chạm vào Trái Đất
     function onPointer(e){
       if(inCard || !earthMesh) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -189,24 +252,20 @@
     window.addEventListener('touchstart', onPointer);
     document.getElementById('backBtn').onclick = backToUniverse;
 
-    // YouTube SkipCut
+    // YouTube không quảng cáo
     document.getElementById("ytInput").addEventListener("change", () => {
       const url = document.getElementById("ytInput").value.trim();
       const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
       if(match) document.getElementById("ytPlayer").src = `https://skipcut.com/watch?v=${match[1]}`;
     });
 
-    // ANIMATION LOOP – CHẠY MƯỢT VĨNH VIỄN
+    // Animation loop
     function animate(){
       requestAnimationFrame(animate);
-
-      // Vẫn render nhẹ khi ở trong card để tránh browser pause WebGL
       if(inCard){
         renderer.render(scene, camera);
         return;
       }
-
-      // Hành tinh + vệt sáng
       trails.forEach(t => {
         t.orbit.rotation.y += (Math.PI*2)/(t.period*60);
         const pos = t.planet.getWorldPosition(new THREE.Vector3());
@@ -215,7 +274,7 @@
         t.trail.geometry.setAttribute('position', new THREE.Float32BufferAttribute(t.positions,3));
       });
 
-      // Sao băng
+      // sao băng
       for(let i=shootingStars.length-1; i>=0; i--){
         const s = shootingStars[i]; s.life++;
         const pos = s.obj.geometry.attributes.position.array;
@@ -239,7 +298,6 @@
         n.material.uniforms.time.value = performance.now()*0.001;
         n.rotation.y += 0.00004*(i+1);
       });
-
       controls.update();
       renderer.render(scene, camera);
     }
