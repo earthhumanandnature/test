@@ -2,47 +2,56 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>Xem YouTube không quảng cáo</title>
+  <title>YouTube Không Quảng Cáo</title>
   <style>
-    body{background:#000;color:#fff;font-family:sans-serif;margin:0}
-    input,button{padding:15px;font-size:18px;width:100%;box-sizing:border-box;margin:10px 0}
-    #player{width:100%;max-height:80vh;background:#000}
-    #info{padding:20px}
+    body{background:#111;color:#fff;font-family:Arial,sans-serif;margin:0;padding:20px;}
+    input{padding:16px;font-size:18px;width:100%;border:none;border-radius:8px;margin-bottom:20px;}
+    #player{width:100%;max-height:80vh;border-radius:0;border-radius:12px;}
+    #info{padding:15px;background:#1a1a1a;border-radius:12px;margin:10px 0;}
+    img{max-width:100%;border-radius:12px;}
   </style>
 </head>
 <body>
-  <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi Enter...">
+  <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi nhấn Enter">
   <div id="info"></div>
-  <video id="player" controls autoplay></video>
+  <video id="player" controls autoplay playsinline></video>
 
   <script>
     document.getElementById("url").addEventListener("change", async () => {
       let url = document.getElementById("url").value.trim();
       if (!url) return;
 
-      // Lấy videoId
-      let videoId = url.match(/(?:v=|\/embed\/|\/\d\/|\/vi?\/|youtu\.be\/|\/shorts\/)([^&?\/]+)/i);
-      if (!videoId) return alert("Link không hợp lệ");
-      videoId = videoId[1];
+      let m = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/)([^&?\/]+)/);
+      if (!m) return alert("Link YouTube không hợp lệ");
+      let videoId = m[1];
 
       try {
-        // Cách 1 – API của mình (khuyên dùng)
-        let res = await fetch(`https://yt-api.corsproxy.io/api/info/${videoId}`);
-        let data = await res.json();
+        let res = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
+        if (!res.ok) throw "API lỗi";
+        let d = await res.json();
 
         document.getElementById("info").innerHTML = `
-          <h2>${data.title}</h2>
-          <p>${data.author} • ${data.viewCount} lượt xem • ${data.uploadDate}</p>
-          <img src="${data.thumbnail}" style="max-width:100%;border-radius:8px">
+          <h2>${d.title || "Không có tiêu đề"}</h2>
+          <p>${d.uploader} • ${d.uploadDate} • ${Number(d.views || 0).toLocaleString()} lượt xem</p>
+          <img src="${d.thumbnail}">
         `;
 
-        // Phát video 1080p không quảng cáo
-        document.getElementById("player").src = data.formats[0].url;
+        // Lấy link chất lượng cao nhất
+        let best = d.videoStreams
+          .filter(s => s.mimeType && s.mimeType.includes("mp4"))
+          .sort((a,b) => (b.bitrate || 0) - (a.bitrate || 0))[0))[0];
+
+        document.getElementById("player").src = best.url;
 
       } catch (e) {
-        alert("Lỗi rồi, thử lại hoặc liên hệ mình nhé!");
+        // Nếu instance chính chết → tự động chuyển sang instance khác
+        let backup = `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`;
+        let res2 = await fetch(backup);
+        let d2 = await res2.json();
+        document.getElementById("player").src = d2.videoStreams[0].url;
+        document.getElementById("info").innerHTML = `<h2>${d2.title}</h2>`;
       }
     });
   </script>
 </body>
-</html>
+</html> 
