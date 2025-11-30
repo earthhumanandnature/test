@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Có Tiếng Mượt 2025</title>
+  <title>YouTube Không Quảng Cáo – Invidious Edition 2025</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
@@ -15,9 +15,9 @@
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo</h1>
+  <h1>YouTube Không Quảng Cáo (Invidious)</h1>
   <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Từ Piped official)</div></div>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Từ Invidious instance ổn định)</div></div>
   <video id="video" controls autoplay playsinline></video>
 
   <script>
@@ -33,12 +33,12 @@
       if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
 
       const id = match[1];
-      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–4 giây)</p>";
+      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (3–5 giây)</p>";
 
       const instances = [
-        `https://pipedapi.kavin.rocks/streams/${id}`,  // Official CDN, sống khỏe nhất
-        `https://pipedapi.projectsegfau.lt/streams/${id}`,  // Backup 1
-        `https://pipedapi.palveluntarjoaja.eu/streams/${id}`  // Backup 2 (mới 2025)
+        `https://yewtu.be/api/v1/videos/${id}`,  // Instance sống khỏe nhất 11/2025, CORS OK
+        `https://invidious.snopyta.org/api/v1/videos/${id}`,  // Backup 1 (EU, nhanh)
+        `https://inv.tux.pizza/api/v1/videos/${id}`  // Backup 2 (nếu cần)
       ];
 
       for (let apiUrl of instances) {
@@ -49,21 +49,13 @@
 
           info.innerHTML = `
             <h2>${data.title}</h2>
-            <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
-            <img src="${data.thumbnail}" alt="Thumbnail">
+            <p>${data.author} • ${data.upload_date} • ${Number(data.view_count || 0).toLocaleString()} lượt xem</p>
+            <img src="${data.videoThumbnails[0]?.quality === 'maxresdefault' ? data.videoThumbnails[0].url : `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}" alt="Thumbnail">
           `;
 
           // HLS stream = có tiếng tự động, ưu tiên 1080p
-          const hlsStreams = data.hlsStreams || [];
-          const bestHls = hlsStreams.find(s => s.quality === '1080p') || hlsStreams.find(s => s.quality === '720p') || hlsStreams[0];
-          if (bestHls) {
-            video.src = bestHls.url;
-          } else {
-            // Fallback video + audio (nếu HLS lag, dùng DASH ghép thủ công)
-            const videoStream = data.videoStreams?.find(s => s.mimeType.includes('mp4')) || data.videoStreams[0];
-            video.src = videoStream ? videoStream.url : '';
-            if (!videoStream) continue;
-          }
+          const hlsUrl = data.hlsUrl || `https://${apiUrl.split('/api')[0].split('https://')[1]}/latest_version?video=${id}&itag=137`;  // Fallback HLS
+          video.src = hlsUrl;
           video.load();
           return;  // Thành công thì dừng
         } catch (e) {
@@ -72,7 +64,11 @@
         }
       }
 
-      info.innerHTML = "<p style='color:#ff5555'>Tất cả instance lag tạm thời, thử lại sau 1 phút hoặc dùng piped.video trực tiếp nha!</p>";
+      // Fallback cuối: Proxy web (YouTubeUnblocked – không cần API, xem ngay không ads)
+      info.innerHTML = "<p style='color:yellow'>Invidious lag, dùng proxy fallback...</p>";
+      const proxyUrl = `https://www.youtubeunblocked.live/watch?v=${id}`;
+      video.src = '';  // Không dùng video tag, redirect hoặc embed
+      info.innerHTML += `<p><a href="${proxyUrl}" target="_blank" style="color:#4a90e2;">Xem ở proxy (có tiếng, không ads)</a></p>`;
     });
   </script>
 </body>
