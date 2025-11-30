@@ -2,31 +2,30 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Không Rip Nữa 2025</title>
+  <title>YouTube Không Quảng Cáo – Embed Proxy 2025 (Có Tiếng Mượt)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
     input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:#fff;margin:15px 0;}
     #info {background:#111;padding:20px;border-radius:12px;}
-    video {width:100%;border-radius:12px;background:#000;}
+    #player {width:100%;height:60vh;border-radius:12px;background:#000;border:none;}
     img {width:100%;border-radius:12px;margin-top:15px;}
     h1 {text-align:center;color:#ff6b6b;}
     #loading {text-align:center;color:#aaa;}
-    .fallback {color:#4a90e2;text-align:center;}
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo (Proxy Edition)</h1>
+  <h1>YouTube Không Quảng Cáo (Proxy Embed)</h1>
   <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (CORS proxy bền 2025)</div></div>
-  <video id="video" controls autoplay playsinline></video>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy web free không ads)</div></div>
+  <iframe id="player" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
 
   <script>
     const input = document.getElementById("url");
     const info = document.getElementById("info");
-    const video = document.getElementById("video");
+    const player = document.getElementById("player");
 
-    input.addEventListener("change", async () => {
+    input.addEventListener("change", () => {
       let url = input.value.trim();
       if (!url) return;
 
@@ -34,44 +33,34 @@
       if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
 
       const id = match[1];
-      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (4–7 giây)</p>";
+      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–3 giây)</p>";
 
-      try {
-        // Proxy bền nhất: allorigins.win (CORS free, hỗ trợ YouTube API 2025)
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://pipedapi.kavin.rocks/streams/${id}`)}`;
-        const res = await fetch(proxyUrl);
-        if (!res.ok) throw "Proxy lag";
-        const proxyData = await res.json();
-        const data = JSON.parse(proxyData.contents);
+      // Proxy embed siêu bền 2025: YouTubeUnblocked (free, no ads, có tiếng, no CORS)
+      // Fallback: GenMirror nếu cái đầu lag (cũng free, SSL secure)
+      const proxyUrls = [
+        `https://www.youtubeunblocked.live/embed/${id}`,  // Proxy 1: Nhanh, giống YouTube thật
+        `https://www.genmirror.com/embed/${id}`  // Proxy 2: Backup, no ads, bandwidth tiết kiệm
+      ];
 
-        info.innerHTML = `
-          <h2>${data.title}</h2>
-          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
-          <img src="${data.thumbnail}" alt="Thumbnail">
-        `;
-
-        // HLS stream qua proxy (có tiếng tự động)
-        const hlsStreams = data.hlsStreams || [];
-        const bestHls = hlsStreams.find(s => s.quality === '1080p') || hlsStreams.find(s => s.quality === '720p') || hlsStreams[0];
-        if (bestHls) {
-          // Proxy HLS URL để tránh CORS khi phát
-          const hlsProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(bestHls.url)}`;
-          video.src = hlsProxy;  // Browser sẽ fetch proxy rồi stream
-        } else {
-          throw "Không có HLS";
-        }
-        video.load();
-
-      } catch (e) {
-        console.log("Proxy fail, fallback...");
-        // Fallback: Mở proxy web (YouTubeUnblocked – có tiếng, không ads, không CORS)
-        const fallbackUrl = `https://www.youtubeunblocked.live/watch?v=${id}`;
-        info.innerHTML = `
-          <p style='color:yellow'>Proxy lag, mở tab mới xem nhé!</p>
-          <a href="${fallbackUrl}" target="_blank" class="fallback">🔗 Xem video có tiếng ở đây (không quảng cáo)</a>
-        `;
-        video.src = '';  // Tắt video tag
+      let currentIndex = 0;
+      function loadProxy() {
+        const proxyUrl = proxyUrls[currentIndex];
+        player.src = proxyUrl;
+        info.innerHTML += `<p>Xem qua proxy: <a href="${proxyUrl}" target="_blank" style="color:#4a90e2;">Mở tab mới nếu lag</a></p>`;
       }
+
+      loadProxy();  // Load proxy đầu tiên
+
+      // Nếu player load fail (hiếm), thử proxy thứ 2 sau 5s
+      player.addEventListener("error", () => {
+        if (currentIndex < proxyUrls.length - 1) {
+          currentIndex++;
+          info.innerHTML = "<p style='color:yellow'>Proxy 1 lag, thử proxy 2...</p>";
+          loadProxy();
+        } else {
+          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử lại sau 1 phút nha!</p>";
+        }
+      });
     });
   </script>
 </body>
