@@ -41,7 +41,7 @@
   </style>
 </head>
 <body>
-  <div id="info">Chạm/bấm vào Trái Đất để mở thiệp!</div>
+  <div id="info">Chạm/bấm vào Trái Đất để mở thiệp bí mật!</div>
   <div id="flash"></div>
 
   <div id="card">
@@ -50,8 +50,8 @@
     <div id="youtubeSection">
       <h2>YouTube Không Quảng Cáo</h2>
       <input type="text" id="ytInput" placeholder="Dán link YouTube rồi Enter...">
-      <iframe id="ytPlayer" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
-      <p class="note">Không quảng cáo • Có tiếng • Shorts & Live OK</p>
+      <iframe id="ytPlayer" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share"></iframe>
+      <p class="note">Không quảng cáo • Có tiếng • Shorts & Live OK • Dùng mãi mãi</p>
     </div>
     <button id="backBtn">Quay lại vũ trụ</button>
   </div>
@@ -62,7 +62,7 @@
   <script>
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
-    const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
+    const renderer = new THREE.WebGLRenderer({antialias:true});
     renderer.setSize(innerWidth, innerHeight);
     renderer.setPixelRatio(devicePixelRatio);
     document.body.appendChild(renderer.domElement);
@@ -77,13 +77,14 @@
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // === TOÀN BỘ 3D (stars, nebula, sun, planets, moon, trails, sao băng) ===
+    // Stars
     const starGeo = new THREE.BufferGeometry();
     const vertices = [];
     for(let i=0;i<40000;i++) vertices.push(THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000));
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:true,transparent:true,opacity:0.9})));
 
+    // Nebula
     const nebulaGroup = new THREE.Group(); scene.add(nebulaGroup);
     for(let l=0;l<3;l++){
       const size = 2500 + l*1000;
@@ -108,10 +109,12 @@
       nebulaGroup.add(m);
     }
 
+    // Sun
     const sun = new THREE.Mesh(new THREE.SphereGeometry(70,64,64), new THREE.MeshBasicMaterial({color:0xffee88}));
     sun.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,32), new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0.6})));
     scene.add(sun); sun.add(new THREE.PointLight(0xffffff,3,6000));
 
+    // Planets + Moon + Trails
     const planetData = [{name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},{name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
       {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},{name:"Mars",r:14,dist:550,color:0xff4444,period:18},
       {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},{name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
@@ -138,6 +141,7 @@
       }
     });
 
+    // Shooting Stars
     const shootingStars = [];
     function createShootingStar(){
       const points = []; for(let i=0;i<200;i++) points.push(new THREE.Vector3());
@@ -149,17 +153,16 @@
     }
     setInterval(()=>{ if(Math.random()<0.85) createShootingStar(); }, 3000);
 
-    // === MỞ & ĐÓNG THIỆP (fix triệt để 2D) ===
+    // MỞ & ĐÓNG THIỆP
     function openCard(){
       inCard = true;
       document.getElementById('flash').style.opacity = 1;
       setTimeout(()=>{
         document.getElementById('flash').style.opacity = 0;
-        renderer.domElement.style.opacity = 0.001;  // không dùng display:none nữa
+        renderer.domElement.style.opacity = 0.001;
         document.getElementById('card').classList.add('show');
       }, 2800);
     }
-
     function backToUniverse(){
       document.getElementById('flash').style.opacity = 1;
       document.getElementById('card').classList.remove('show');
@@ -172,6 +175,7 @@
       }, 2800);
     }
 
+    // Bấm Trái Đất
     function onPointer(e){
       if(inCard || !earthMesh) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -185,17 +189,24 @@
     window.addEventListener('touchstart', onPointer);
     document.getElementById('backBtn').onclick = backToUniverse;
 
+    // YouTube SkipCut
     document.getElementById("ytInput").addEventListener("change", () => {
       const url = document.getElementById("ytInput").value.trim();
       const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
       if(match) document.getElementById("ytPlayer").src = `https://skipcut.com/watch?v=${match[1]}`;
     });
 
-    // === ANIMATION LOOP MƯỢT VĨNH VIỄN ===
+    // ANIMATION LOOP – CHẠY MƯỢT VĨNH VIỄN
     function animate(){
       requestAnimationFrame(animate);
-      if(inCard) { renderer.render(scene, camera); return; }  // vẫn render nhẹ khi ở card để tránh browser pause
 
+      // Vẫn render nhẹ khi ở trong card để tránh browser pause WebGL
+      if(inCard){
+        renderer.render(scene, camera);
+        return;
+      }
+
+      // Hành tinh + vệt sáng
       trails.forEach(t => {
         t.orbit.rotation.y += (Math.PI*2)/(t.period*60);
         const pos = t.planet.getWorldPosition(new THREE.Vector3());
@@ -204,6 +215,7 @@
         t.trail.geometry.setAttribute('position', new THREE.Float32BufferAttribute(t.positions,3));
       });
 
+      // Sao băng
       for(let i=shootingStars.length-1; i>=0; i--){
         const s = shootingStars[i]; s.life++;
         const pos = s.obj.geometry.attributes.position.array;
@@ -215,7 +227,9 @@
         s.obj.geometry.attributes.position.needsUpdate = true;
         s.obj.material.opacity = Math.max(0, 1 - s.life/s.maxLife);
         if(s.life > s.maxLife){
-          scene.remove(s.obj); s.obj.geometry.dispose(); s.obj.material.dispose();
+          scene.remove(s.obj);
+          s.obj.geometry.dispose();
+          s.obj.material.dispose();
           shootingStars.splice(i,1);
         }
       }
@@ -225,6 +239,7 @@
         n.material.uniforms.time.value = performance.now()*0.001;
         n.rotation.y += 0.00004*(i+1);
       });
+
       controls.update();
       renderer.render(scene, camera);
     }
