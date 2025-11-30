@@ -2,77 +2,77 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Piped Edition</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Không Quảng Cáo – Có Tiếng Mượt 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {margin:0;background:#000;color:#fff;font-family:system-ui,Arial,sans-serif;padding:20px;}
-    #container {max-width:1000px;margin:0 auto;}
-    h1 {text-align:center;color:#ff6b6b;margin:20px 0;}
-    input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:white;margin-bottom:20px;box-sizing:border-box;}
-    #info {background:#111;padding:20px;border-radius:12px;margin-bottom:20px;}
+    body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
+    input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:#fff;margin:15px 0;}
+    #info {background:#111;padding:20px;border-radius:12px;}
     video {width:100%;border-radius:12px;background:#000;}
     img {width:100%;border-radius:12px;margin-top:15px;}
-    .note {text-align:center;color:#888;font-size:14px;margin-top:30px;}
+    h1 {text-align:center;color:#ff6b6b;}
+    #loading {text-align:center;color:#aaa;}
   </style>
 </head>
 <body>
-  <div id="container">
-    <h1>YouTube Không Quảng Cáo – Piped 2025</h1>
-    <input type="text" id="urlInput" placeholder="Dán link YouTube vào đây rồi nhấn Enter..." autofocus>
-    <div id="info"><div id="loading">Sử dụng Piped – Không CORS, có tiếng HLS!</div></div>
-    <video id="player" controls autoplay playsinline></video>
-    <p class="note">Có tiếng • Không quảng cáo • 1080p max • Shorts/Live OK</p>
-  </div>
+  <h1>YouTube Không Quảng Cáo</h1>
+  <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Từ Piped official)</div></div>
+  <video id="video" controls autoplay playsinline></video>
 
   <script>
-    const input = document.getElementById("urlInput");
-    const infoDiv = document.getElementById("info");
-    const player = document.getElementById("player");
+    const input = document.getElementById("url");
+    const info = document.getElementById("info");
+    const video = document.getElementById("video");
 
     input.addEventListener("change", async () => {
       let url = input.value.trim();
       if (!url) return;
 
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
-      const match = url.match(regex);
-      if (!match) {
-        infoDiv.innerHTML = "<p style='color:#ff5555'>Link không hợp lệ!</p>";
-        return;
-      }
-      const videoId = match[1];
+      const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+      if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
 
-      infoDiv.innerHTML = "<p>Đang tải từ Piped... (2–4 giây)</p>";
-      player.src = "";
+      const id = match[1];
+      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–4 giây)</p>";
 
-      try {
-        // Piped instance sống khỏe 30/11/2025 (CORS enabled)
-        const pipedApi = `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`;
-        const res = await fetch(pipedApi);
-        if (!res.ok) throw "Piped fail";
+      const instances = [
+        `https://pipedapi.kavin.rocks/streams/${id}`,  // Official CDN, sống khỏe nhất
+        `https://pipedapi.projectsegfau.lt/streams/${id}`,  // Backup 1
+        `https://pipedapi.palveluntarjoaja.eu/streams/${id}`  // Backup 2 (mới 2025)
+      ];
 
-        const data = await res.json();
+      for (let apiUrl of instances) {
+        try {
+          const res = await fetch(apiUrl);
+          if (!res.ok) continue;
+          const data = await res.json();
 
-        infoDiv.innerHTML = `
-          <h2>${data.title}</h2>
-          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} views</p>
-          <img src="${data.thumbnail}" alt="Thumbnail">
-        `;
+          info.innerHTML = `
+            <h2>${data.title}</h2>
+            <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
+            <img src="${data.thumbnail}" alt="Thumbnail">
+          `;
 
-        // HLS stream (ghép video + audio tự động, có tiếng!)
-        const hlsStream = data.hlsStreams?.find(s => s.quality === '1080p') || data.hlsStreams?.[0];
-        if (hlsStream) {
-          player.src = hlsStream.url;
-        } else {
-          // Fallback video stream
-          const videoStream = data.videoStreams?.[0]?.url;
-          player.src = videoStream;
-          infoDiv.innerHTML += "<p style='color:yellow'>Dùng video only (thử browser khác nếu mất tiếng)</p>";
+          // HLS stream = có tiếng tự động, ưu tiên 1080p
+          const hlsStreams = data.hlsStreams || [];
+          const bestHls = hlsStreams.find(s => s.quality === '1080p') || hlsStreams.find(s => s.quality === '720p') || hlsStreams[0];
+          if (bestHls) {
+            video.src = bestHls.url;
+          } else {
+            // Fallback video + audio (nếu HLS lag, dùng DASH ghép thủ công)
+            const videoStream = data.videoStreams?.find(s => s.mimeType.includes('mp4')) || data.videoStreams[0];
+            video.src = videoStream ? videoStream.url : '';
+            if (!videoStream) continue;
+          }
+          video.load();
+          return;  // Thành công thì dừng
+        } catch (e) {
+          console.log(`Instance ${apiUrl} fail, thử cái khác...`);
+          continue;
         }
-        player.load();
-
-      } catch (e) {
-        infoDiv.innerHTML = "<p style='color:#ff5555'>Piped lag, thử Cách 1 hoặc self-host nha!</p>";
       }
+
+      info.innerHTML = "<p style='color:#ff5555'>Tất cả instance lag tạm thời, thử lại sau 1 phút hoặc dùng piped.video trực tiếp nha!</p>";
     });
   </script>
 </body>
