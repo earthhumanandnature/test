@@ -6,7 +6,7 @@
   <title>Chill and Ytb</title>
   <style>
     body { margin:0; overflow:hidden; background:#000; }
-    canvas { position:fixed; top:0; left:0; z-index:1; }
+    canvas { position:fixed; top:0; left:0; z-index:1; transition:opacity 0.4s; }
     #info { position:fixed; top:10px; left:10px; color:#fff; padding:10px 15px;
             background:rgba(0,0,0,0.7); border-radius:8px; font-family:Arial;
             pointer-events:none; z-index:100; font-size:14px; }
@@ -41,18 +41,17 @@
   </style>
 </head>
 <body>
-  <div id="info">Chạm hoặc bấm vào Trái Đất để mở thiệp bí mật!</div>
+  <div id="info">Chạm/bấm vào Trái Đất để mở thiệp!</div>
   <div id="flash"></div>
 
   <div id="card">
     <h1>Chill Cùng Anh Nhé</h1>
-    <p>Dán link YouTube là xem mượt, không quảng cáo luôn!</p>
-
+    <p>Dán link YouTube → xem mượt, không quảng cáo!</p>
     <div id="youtubeSection">
       <h2>YouTube Không Quảng Cáo</h2>
-      <input type="text" id="ytInput" placeholder="Dán link YouTube vào đây rồi Enter...">
-      <iframe id="ytPlayer" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share"></iframe>
-      <p class="note">Không quảng cáo • Có tiếng • Shorts & Live OK • Dùng mãi mãi</p>
+      <input type="text" id="ytInput" placeholder="Dán link YouTube rồi Enter...">
+      <iframe id="ytPlayer" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
+      <p class="note">Không quảng cáo • Có tiếng • Shorts & Live OK</p>
     </div>
     <button id="backBtn">Quay lại vũ trụ</button>
   </div>
@@ -63,7 +62,7 @@
   <script>
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
-    const renderer = new THREE.WebGLRenderer({antialias:true});
+    const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
     renderer.setSize(innerWidth, innerHeight);
     renderer.setPixelRatio(devicePixelRatio);
     document.body.appendChild(renderer.domElement);
@@ -74,22 +73,21 @@
 
     let earthMesh = null;
     let inCard = false;
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // Stars
+    // === TOÀN BỘ 3D (stars, nebula, sun, planets, moon, trails, sao băng) ===
     const starGeo = new THREE.BufferGeometry();
     const vertices = [];
     for(let i=0;i<40000;i++) vertices.push(THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000));
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:true,transparent:true,opacity:0.9})));
 
-    // Nebula
     const nebulaGroup = new THREE.Group(); scene.add(nebulaGroup);
     for(let l=0;l<3;l++){
       const size = 2500 + l*1000;
-      const mat = new THREE.ShaderMaterial({
-        uniforms:{time:{value:0},layer:{value:l}},
+      const mat = new THREE.ShaderMaterial({uniforms:{time:{value:0},layer:{value:l}},
         vertexShader:`varying vec3 vPos;void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
         fragmentShader:`uniform float time;uniform float layer;varying vec3 vPos;
           float hash(vec3 p){return fract(sin(dot(p,vec3(7,157,113)))*43758.5453);}
@@ -110,12 +108,10 @@
       nebulaGroup.add(m);
     }
 
-    // Sun
     const sun = new THREE.Mesh(new THREE.SphereGeometry(70,64,64), new THREE.MeshBasicMaterial({color:0xffee88}));
     sun.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,32), new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0.6})));
     scene.add(sun); sun.add(new THREE.PointLight(0xffffff,3,6000));
 
-    // Planets + Trails + Moon
     const planetData = [{name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},{name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
       {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},{name:"Mars",r:14,dist:550,color:0xff4444,period:18},
       {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},{name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
@@ -142,7 +138,6 @@
       }
     });
 
-    // Shooting Stars
     const shootingStars = [];
     function createShootingStar(){
       const points = []; for(let i=0;i<200;i++) points.push(new THREE.Vector3());
@@ -154,29 +149,29 @@
     }
     setInterval(()=>{ if(Math.random()<0.85) createShootingStar(); }, 3000);
 
-    // MỞ & ĐÓNG THIỆP
+    // === MỞ & ĐÓNG THIỆP (fix triệt để 2D) ===
     function openCard(){
       inCard = true;
       document.getElementById('flash').style.opacity = 1;
       setTimeout(()=>{
         document.getElementById('flash').style.opacity = 0;
-        renderer.domElement.style.display = 'none';
+        renderer.domElement.style.opacity = 0.001;  // không dùng display:none nữa
         document.getElementById('card').classList.add('show');
       }, 2800);
     }
+
     function backToUniverse(){
       document.getElementById('flash').style.opacity = 1;
       document.getElementById('card').classList.remove('show');
       setTimeout(()=>{
         document.getElementById('flash').style.opacity = 0;
-        renderer.domElement.style.display = 'block';
+        renderer.domElement.style.opacity = 1;
         inCard = false;
+        controls.enabled = true;
         controls.update();
-        animate();
       }, 2800);
     }
 
-    // Bấm Trái Đất
     function onPointer(e){
       if(inCard || !earthMesh) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -190,17 +185,16 @@
     window.addEventListener('touchstart', onPointer);
     document.getElementById('backBtn').onclick = backToUniverse;
 
-    // YouTube SkipCut
     document.getElementById("ytInput").addEventListener("change", () => {
       const url = document.getElementById("ytInput").value.trim();
       const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
       if(match) document.getElementById("ytPlayer").src = `https://skipcut.com/watch?v=${match[1]}`;
     });
 
-    // ANIMATION LOOP
+    // === ANIMATION LOOP MƯỢT VĨNH VIỄN ===
     function animate(){
-      if(inCard) return;
       requestAnimationFrame(animate);
+      if(inCard) { renderer.render(scene, camera); return; }  // vẫn render nhẹ khi ở card để tránh browser pause
 
       trails.forEach(t => {
         t.orbit.rotation.y += (Math.PI*2)/(t.period*60);
@@ -222,7 +216,7 @@
         s.obj.material.opacity = Math.max(0, 1 - s.life/s.maxLife);
         if(s.life > s.maxLife){
           scene.remove(s.obj); s.obj.geometry.dispose(); s.obj.material.dispose();
-          shooting040Stars.splice(i,1);
+          shootingStars.splice(i,1);
         }
       }
 
