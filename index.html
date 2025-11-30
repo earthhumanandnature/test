@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Proxy Sống Khỏe 2025 (Có Tiếng Mượt)</title>
+  <title>YouTube Không Quảng Cáo – Proxy Top 2025 (Có Tiếng Siêu Mượt)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
@@ -16,9 +16,9 @@
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo (Proxy Embed Mới)</h1>
+  <h1>YouTube Không Quảng Cáo (Proxy Embed Top 2025)</h1>
   <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy sống khỏe 2025)</div></div>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy free no ads)</div></div>
   <iframe id="player" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
 
   <script>
@@ -34,13 +34,14 @@
       if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
 
       const id = match[1];
-      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–3 giây)</p>";
+      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–4 giây)</p>";
 
-      // Proxy sống khỏe nhất 2025 (test 30/11/2025)
+      // Proxy top 2025 (test 30/11/2025, ưu tiên SkipCut)
       const proxyUrls = [
-        `https://www.genmirror.com/embed/${id}`,  // Proxy 1: GenMirror (SSL, no ads, có tiếng OK)
-        `https://www.blockaway.net/embed/${id}`,   // Proxy 2: BlockAway (free, unblock YouTube tốt)
-        `https://proxysite.pro/#/https://www.youtube.com/watch?v=${id}`  // Proxy 3: Proxysite.pro (streaming support, fallback)
+        `https://skipcut.com/watch?v=${id}`,  // Proxy 1: SkipCut (no ads, official embed, có tiếng OK)
+        `https://proxysite.com/#/https://www.youtube.com/embed/${id}`,  // Proxy 2: Proxysite.com (simple, unblock mượt)
+        `https://4everproxy.com/?url=https://www.youtube.com/embed/${id}`,  // Proxy 3: 4everproxy (block ads/scripts)
+        `https://www.croxyproxy.com/embed.php?u=https://www.youtube.com/embed/${id}`  // Proxy 4: CroxyProxy (low bandwidth)
       ];
 
       let currentIndex = 0;
@@ -52,14 +53,14 @@
 
       loadProxy();  // Load proxy đầu tiên
 
-      // Nếu player load fail, thử proxy tiếp theo sau 5s
+      // Fallback tự động nếu error
       player.addEventListener("error", () => {
         if (currentIndex < proxyUrls.length - 1) {
           currentIndex++;
-          info.innerHTML = "<p style='color:yellow'>Proxy 1 lag, thử proxy 2...</p>";
-          setTimeout(loadProxy, 2000);
+          info.innerHTML = "<p style='color:yellow'>Proxy trước lag, thử cái sau...</p>";
+          setTimeout(loadProxy, 3000);  // Chờ 3s trước khi thử
         } else {
-          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử VPN hoặc NewPipe app nha!</p>";
+          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử VPN free (ProtonVPN) hoặc NewPipe app nha!</p>";
         }
       });
     });
