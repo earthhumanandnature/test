@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Invidious Edition 2025</title>
+  <title>YouTube Không Quảng Cáo – Không Rip Nữa 2025</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
@@ -12,12 +12,13 @@
     img {width:100%;border-radius:12px;margin-top:15px;}
     h1 {text-align:center;color:#ff6b6b;}
     #loading {text-align:center;color:#aaa;}
+    .fallback {color:#4a90e2;text-align:center;}
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo (Invidious)</h1>
+  <h1>YouTube Không Quảng Cáo (Proxy Edition)</h1>
   <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Từ Invidious instance ổn định)</div></div>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (CORS proxy bền 2025)</div></div>
   <video id="video" controls autoplay playsinline></video>
 
   <script>
@@ -33,42 +34,44 @@
       if (!match) return info.innerHTML = "<p style='color:#ff5555'>Link sai rồi bro!</p>";
 
       const id = match[1];
-      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (3–5 giây)</p>";
+      info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (4–7 giây)</p>";
 
-      const instances = [
-        `https://yewtu.be/api/v1/videos/${id}`,  // Instance sống khỏe nhất 11/2025, CORS OK
-        `https://invidious.snopyta.org/api/v1/videos/${id}`,  // Backup 1 (EU, nhanh)
-        `https://inv.tux.pizza/api/v1/videos/${id}`  // Backup 2 (nếu cần)
-      ];
+      try {
+        // Proxy bền nhất: allorigins.win (CORS free, hỗ trợ YouTube API 2025)
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://pipedapi.kavin.rocks/streams/${id}`)}`;
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw "Proxy lag";
+        const proxyData = await res.json();
+        const data = JSON.parse(proxyData.contents);
 
-      for (let apiUrl of instances) {
-        try {
-          const res = await fetch(apiUrl);
-          if (!res.ok) continue;
-          const data = await res.json();
+        info.innerHTML = `
+          <h2>${data.title}</h2>
+          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
+          <img src="${data.thumbnail}" alt="Thumbnail">
+        `;
 
-          info.innerHTML = `
-            <h2>${data.title}</h2>
-            <p>${data.author} • ${data.upload_date} • ${Number(data.view_count || 0).toLocaleString()} lượt xem</p>
-            <img src="${data.videoThumbnails[0]?.quality === 'maxresdefault' ? data.videoThumbnails[0].url : `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}" alt="Thumbnail">
-          `;
-
-          // HLS stream = có tiếng tự động, ưu tiên 1080p
-          const hlsUrl = data.hlsUrl || `https://${apiUrl.split('/api')[0].split('https://')[1]}/latest_version?video=${id}&itag=137`;  // Fallback HLS
-          video.src = hlsUrl;
-          video.load();
-          return;  // Thành công thì dừng
-        } catch (e) {
-          console.log(`Instance ${apiUrl} fail, thử cái khác...`);
-          continue;
+        // HLS stream qua proxy (có tiếng tự động)
+        const hlsStreams = data.hlsStreams || [];
+        const bestHls = hlsStreams.find(s => s.quality === '1080p') || hlsStreams.find(s => s.quality === '720p') || hlsStreams[0];
+        if (bestHls) {
+          // Proxy HLS URL để tránh CORS khi phát
+          const hlsProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(bestHls.url)}`;
+          video.src = hlsProxy;  // Browser sẽ fetch proxy rồi stream
+        } else {
+          throw "Không có HLS";
         }
-      }
+        video.load();
 
-      // Fallback cuối: Proxy web (YouTubeUnblocked – không cần API, xem ngay không ads)
-      info.innerHTML = "<p style='color:yellow'>Invidious lag, dùng proxy fallback...</p>";
-      const proxyUrl = `https://www.youtubeunblocked.live/watch?v=${id}`;
-      video.src = '';  // Không dùng video tag, redirect hoặc embed
-      info.innerHTML += `<p><a href="${proxyUrl}" target="_blank" style="color:#4a90e2;">Xem ở proxy (có tiếng, không ads)</a></p>`;
+      } catch (e) {
+        console.log("Proxy fail, fallback...");
+        // Fallback: Mở proxy web (YouTubeUnblocked – có tiếng, không ads, không CORS)
+        const fallbackUrl = `https://www.youtubeunblocked.live/watch?v=${id}`;
+        info.innerHTML = `
+          <p style='color:yellow'>Proxy lag, mở tab mới xem nhé!</p>
+          <a href="${fallbackUrl}" target="_blank" class="fallback">🔗 Xem video có tiếng ở đây (không quảng cáo)</a>
+        `;
+        video.src = '';  // Tắt video tag
+      }
     });
   </script>
 </body>
