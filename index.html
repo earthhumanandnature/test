@@ -2,104 +2,76 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo 2025 – Fix CORS 100% (Cách 1)</title>
+  <title>YouTube Không Quảng Cáo – Piped Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{margin:0;background:#000;color:#fff;font-family:system-ui;padding:20px;}
-    #container{max-width:1000px;margin:auto;}
-    input{width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:white;margin-bottom:20px;}
-    #info{background:#111;padding:20px;border-radius:12px;margin-bottom:20px;}
-    video{width:100%;border-radius:12px;background:#000;}
-    h1{text-align:center;color:#ff6b6b;margin:20px 0;}
-    .note{text-align:center;color:#888;font-size:14px;margin-top:30px;}
+    body {margin:0;background:#000;color:#fff;font-family:system-ui,Arial,sans-serif;padding:20px;}
+    #container {max-width:1000px;margin:0 auto;}
+    h1 {text-align:center;color:#ff6b6b;margin:20px 0;}
+    input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:white;margin-bottom:20px;box-sizing:border-box;}
+    #info {background:#111;padding:20px;border-radius:12px;margin-bottom:20px;}
+    video {width:100%;border-radius:12px;background:#000;}
+    img {width:100%;border-radius:12px;margin-top:15px;}
+    .note {text-align:center;color:#888;font-size:14px;margin-top:30px;}
   </style>
 </head>
 <body>
   <div id="container">
-    <h1>YouTube Không Quảng Cáo (Có Tiếng • Fix CORS)</h1>
-    <input type="text" id="urlInput" placeholder="Dán link YouTube vào đây rồi Enter..." autofocus>
-    <div id="info"></div>
+    <h1>YouTube Không Quảng Cáo – Piped 2025</h1>
+    <input type="text" id="urlInput" placeholder="Dán link YouTube vào đây rồi nhấn Enter..." autofocus>
+    <div id="info"><div id="loading">Sử dụng Piped – Không CORS, có tiếng HLS!</div></div>
     <video id="player" controls autoplay playsinline></video>
-    <p class="note">Chạy ngon trên Vercel/Netlify • Không ads • Shorts/Live/Playlist OK</p>
+    <p class="note">Có tiếng • Không quảng cáo • 1080p max • Shorts/Live OK</p>
   </div>
 
   <script>
     const input = document.getElementById("urlInput");
-    const info = document.getElementById("info");
+    const infoDiv = document.getElementById("info");
     const player = document.getElementById("player");
 
     input.addEventListener("change", async () => {
       let url = input.value.trim();
       if (!url) return;
 
-      // Lấy video ID siêu chính xác
       const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
       const match = url.match(regex);
-      if (!match) return alert("Link YouTube không hợp lệ bro!");
-
+      if (!match) {
+        infoDiv.innerHTML = "<p style='color:#ff5555'>Link không hợp lệ!</p>";
+        return;
+      }
       const videoId = match[1];
-      info.innerHTML = `<p>Đang tải video <b>${videoId}</b>... (3–5 giây thôi)</p>`;
+
+      infoDiv.innerHTML = "<p>Đang tải từ Piped... (2–4 giây)</p>";
+      player.src = "";
 
       try {
-        // Danh sách API qua CORS Proxy (Cách 1 – siêu bền 2025)
-        const proxy = "https://corsproxy.io/?";
-        const apiList = [
-          `${proxy}https://yt5s.io/api/ajaxSearch`,     // Ưu tiên yt5s (nhanh + chất lượng cao)
-          `${proxy}https://yt1s.com/api/ajaxSearch`,    // Backup 1
-          `${proxy}https://cobalt.tools/api/json`      // Backup 2 (POST JSON)
-        ];
+        // Piped instance sống khỏe 30/11/2025 (CORS enabled)
+        const pipedApi = `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`;
+        const res = await fetch(pipedApi);
+        if (!res.ok) throw "Piped fail";
 
-        let data;
-        for (let api of apiList) {
-          try {
-            if (api.includes("ajaxSearch")) {
-              // POST form data cho yt5s/yt1s
-              const res = await fetch(api, {
-                method: "POST",
-                headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                body: new URLSearchParams({q: `https://youtu.be/${videoId}`, vt: "home"})
-              });
-              const json = await res.json();
-              if (json.title) {
-                // Lấy stream chất lượng cao nhất (mp4 1080p/720p/360p)
-                const keys = ["137", "399", "399", "22", "18", "36"]; // Ưu tiên cao → thấp
-                let streamKey = keys.find(k => json.links[k]);
-                data = {
-                  title: json.title,
-                  thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-                  stream: json.links[streamKey]?.k || Object.values(json.links)[0]?.k
-                };
-                break;
-              }
-            } else if (api.includes("cobalt.tools")) {
-              // POST JSON cho cobalt
-              const res = await fetch(api, {
-                method: "POST",
-                headers: {"Content-Type": "application/json", "Accept": "application/json"},
-                body: JSON.stringify({url: `https://youtu.be/${videoId}`, aFormat: "mp3", isAudioOnly: false})
-              });
-              const json = await res.json();
-              if (json.url) {
-                data = {title: json.title || "Video", thumbnail: json.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, stream: json.url};
-                break;
-              }
-            }
-          } catch (e) { continue; } // Thử API tiếp theo nếu lỗi
-        }
+        const data = await res.json();
 
-        if (!data || !data.stream) throw "Không tìm thấy stream nào";
-
-        // Hiển thị info + phát video (có tiếng tự động)
-        info.innerHTML = `
+        infoDiv.innerHTML = `
           <h2>${data.title}</h2>
-          <img src="${data.thumbnail}" style="width:100%;border-radius:12px;margin:15px 0;">
+          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} views</p>
+          <img src="${data.thumbnail}" alt="Thumbnail">
         `;
 
-        player.src = data.stream;
+        // HLS stream (ghép video + audio tự động, có tiếng!)
+        const hlsStream = data.hlsStreams?.find(s => s.quality === '1080p') || data.hlsStreams?.[0];
+        if (hlsStream) {
+          player.src = hlsStream.url;
+        } else {
+          // Fallback video stream
+          const videoStream = data.videoStreams?.[0]?.url;
+          player.src = videoStream;
+          infoDiv.innerHTML += "<p style='color:yellow'>Dùng video only (thử browser khác nếu mất tiếng)</p>";
+        }
         player.load();
 
       } catch (e) {
-        info.innerHTML = `<p style="color:#ff5555">Tạm thời lỗi, thử link khác hoặc reload trang nha! (CORS đã fix rồi)</p>`;
+        infoDiv.innerHTML = "<p style='color:#ff5555'>Piped lag, thử Cách 1 hoặc self-host nha!</p>";
       }
     });
   </script>
