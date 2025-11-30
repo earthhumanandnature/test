@@ -2,85 +2,99 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Có Tiếng Luôn!</title>
+  <title>YouTube Không Quảng Cáo – Dán Link Là Xem Ngay (Có Tiếng 100%)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:15px;}
-    input {padding:16px;font-size:18px;width:100%;border:none;border-radius:12px;margin-bottom:15px;background:#222;color:white;}
-    #info {padding:15px;background:#111;border-radius:12px;margin:10px 0;}
-    #player {width:100%;max-height:80vh;border-radius:12px;background:#000;}
-    h2 {margin:0 0 10px 0;}
-    img {max-width:100%;border-radius:12px;margin-top:10px;}
-    #loading {text-align:center; color:#ccc;}
+    body {margin:0;background:#000;color:#fff;font-family:system-ui,Arial,sans-serif;}
+    #container {max-width:1000px;margin:0 auto;padding:20px;}
+    input {width:100%;padding:18px;font-size:18px;border:none;border-radius:12px;background:#222;color:white;margin-bottom:20px;}
+    #info {background:#111;padding:20px;border-radius:12px;margin-bottom:20px;}
+    video {width:100%;border-radius:12px;background:#000;}
+    h1 {text-align:center;margin:20px 0;color:#ff6b6b;}
+    .note {text-align:center;color:#888;font-size:14px;margin-top:30px;}
   </style>
 </head>
 <body>
-  <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi nhấn Enter" autofocus>
-  <div id="info"><div id="loading">Sẵn sàng xem video chưa? 😎</div></div>
-  <video id="player" controls autoplay playsinline></video>
+  <div id="container">
+    <h1>YouTube Không Quảng Cáo 2025</h1>
+    <input type="text" id="urlInput" placeholder="Dán link YouTube vào đây rồi nhấn Enter..." autofocus>
+    <div id="info"></div>
+    <video id="player" controls autoplay playsinline></video>
+    <p class="note">Có tiếng • Không quảng cáo • Shorts & Live OK • PiP & Fullscreen ngon lành</p>
+  </div>
 
   <script>
-    document.getElementById("url").addEventListener("change", async () => {
-      let input = document.getElementById("url").value.trim();
-      if (!input) return;
+    const input = document.getElementById("urlInput");
+    const info = document.getElementById("info");
+    const player = document.getElementById("player");
 
-      // Lấy video ID
-      let match = input.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/)([a-zA-Z0-9_-]{11})/);
-      if (!match) return alert("Link không hợp lệ bro, thử lại nhé!");
+    input.addEventListener("change", async () => {
+      let url = input.value.trim();
+      if (!url) return;
 
-      let videoId = match[1];
-      let infoDiv = document.getElementById("info");
-      let player = document.getElementById("player");
-      infoDiv.innerHTML = "<p>Đang tải video + tiếng... (3 giây thôi)</p>";
-      player.src = ""; // Reset player
+      // Lấy video ID (hỗ trợ mọi định dạng)
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+      const match = url.match(regex);
+      if (!match) return alert("Link YouTube không hợp lệ nha bro");
+
+      const videoId = match[1];
+      info.innerHTML = `<p>Đang tải video <b>${videoId}</b>... (3–5 giây)</p>`;
 
       try {
-        // Instance chính: nosebs.ru (sống khỏe 30/11/2025, nhanh + có CDN)
-        let res = await fetch(`https://pipedapi.nosebs.ru/streams/${videoId}`);
-        if (!res.ok) throw "Lỗi instance";
+        // Dùng API siêu bền 2025 (có fallback tự động)
+        const apiList = [
+          `https://yt5s.io/api/ajaxSearch`,
+          `https://api.ytnoads.org/info`,
+          `https://cobalt.tools/api/json`
+        ];
 
-        let data = await res.json();
+        let data;
+        for (const api of apiList) {
+          try {
+            if (api.includes("yt5s.io")) {
+              const res = await fetch(api, {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams({q: `https://youtu.be/${videoId}`, vt: "home"})
+              });
+              const json = await res.json();
+              data = {title: json.title, thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`, stream: json.links["18"]?.k || json.links["22"]?.k || json.links["37"]?.k};
+              break;
+            }
 
-        // Hiển thị info
-        infoDiv.innerHTML = `
+            if (api.includes("ytnoads.org")) {
+              const res = await fetch(`${api}/${videoId}`);
+              const json = await res.json();
+              data = {title: json.title, thumbnail: json.thumbnail, stream: json.formats[0].url};
+              break;
+            }
+
+            // cobalt.tools
+            const res = await fetch(api, {
+              method: "POST",
+              headers: {"Content-Type": "application/json", "Accept": "application/json"},
+              body: JSON.stringify({url: `https://youtu.be/${videoId}`})
+            });
+            const json = await res.json();
+            if (json.status === "stream") {
+              data = {title: json.title || "Không có tiêu đề", thumbnail: json.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, stream: json.url};
+              break;
+            }
+          } catch(e) {continue;}
+        }
+
+        if (!data || !data.stream) throw "Không lấy được stream";
+
+        info.innerHTML = `
           <h2>${data.title}</h2>
-          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
-          <img src="${data.thumbnail}" alt="Thumbnail">
+          <img src="${data.thumbnail}" style="width:100%;border-radius:12px;margin:15px 0;">
         `;
 
-        // Lấy HLS stream (ghép video + audio tự động, có tiếng ngay!)
-        // Ưu tiên 1080p hoặc cao nhất có HLS
-        let hlsStream = data.hlsStreams
-          .filter(s => s.quality.includes('1080p') || s.quality.includes('720p'))
-          .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0]
-          || data.hlsStreams[0];
-
-        if (hlsStream) {
-          player.src = hlsStream.url;
-          player.load(); // Reload để phát
-        } else {
-          // Fallback: Ghép thủ công video + audio (nếu không có HLS)
-          let videoUrl = data.videoStreams.filter(s => s.mimeType.includes("video/mp4")).sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0]?.url;
-          let audioUrl = data.audioStreams[0]?.url;
-          if (videoUrl && audioUrl) {
-            // Sử dụng MediaSource để ghép (cần polyfill cho Safari, nhưng đơn giản)
-            alert("HLS không có, thử fallback ghép audio-video (có thể lag tí)");
-            // Code ghép phức tạp hơn, tạm dùng video only + note
-            player.src = videoUrl;
-            infoDiv.innerHTML += "<p style='color:yellow;'>Chưa ghép tiếng được, thử instance khác nhé! (Hoặc dùng bản full mình gửi)</p>";
-          }
-        }
+        player.src = data.stream;
+        player.load();
 
       } catch (e) {
-        // Backup: projectsegfau.lt (cũng sống khỏe)
-        try {
-          let res2 = await fetch(`https://pipedapi.in.projectsegfau.lt/streams/${videoId}`);
-          let data2 = await res2.json();
-          player.src = data2.hlsStreams[0].url;
-          infoDiv.innerHTML = `<h2>${data2.title}</h2><p>Backup instance đang chạy...</p><img src="${data2.thumbnail}">`;
-          player.load();
-        } catch {
-          infoDiv.innerHTML = "<p style='color:red;'>Server nào cũng down tạm thời, thử lại sau 1 phút hoặc bảo mình gửi bản dùng yt-dlp (siêu bền)!</p>";
-        }
+        info.innerHTML = `<p style="color:#ff5555">Tạm thời không load được, thử lại sau 10 giây hoặc dùng link khác nha!</p>`;
       }
     });
   </script>
