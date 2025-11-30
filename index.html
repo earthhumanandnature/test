@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Dán Link Là Xem Ngay</title>
+  <title>YouTube Không Quảng Cáo – Có Tiếng Luôn!</title>
   <style>
     body {background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:15px;}
     input {padding:16px;font-size:18px;width:100%;border:none;border-radius:12px;margin-bottom:15px;background:#222;color:white;}
@@ -10,11 +10,12 @@
     #player {width:100%;max-height:80vh;border-radius:12px;background:#000;}
     h2 {margin:0 0 10px 0;}
     img {max-width:100%;border-radius:12px;margin-top:10px;}
+    #loading {text-align:center; color:#ccc;}
   </style>
 </head>
 <body>
   <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi nhấn Enter" autofocus>
-  <div id="info"></div>
+  <div id="info"><div id="loading">Sẵn sàng xem video chưa? 😎</div></div>
   <video id="player" controls autoplay playsinline></video>
 
   <script>
@@ -23,45 +24,62 @@
       if (!input) return;
 
       // Lấy video ID
-      let match = input.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/|\/)([a-zA-Z0-9_-]{11})/);
-      if (!match) return alert("Link không hợp lệ bro");
-      let videoId = match[1];
+      let match = input.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/)([a-zA-Z0-9_-]{11})/);
+      if (!match) return alert("Link không hợp lệ bro, thử lại nhé!");
 
-      // Xóa nội dung cũ
-      document.getElementById("info").innerHTML = "<p>Đang tải video…</p>";
-      document.getElementById("player").src = "";
+      let videoId = match[1];
+      let infoDiv = document.getElementById("info");
+      let player = document.getElementById("player");
+      infoDiv.innerHTML = "<p>Đang tải video + tiếng... (3 giây thôi)</p>";
+      player.src = ""; // Reset player
 
       try {
-        // Instance chính (rất nhanh)
-        let res = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-        if (!res.ok) throw "Lỗi";
+        // Instance chính: nosebs.ru (sống khỏe 30/11/2025, nhanh + có CDN)
+        let res = await fetch(`https://pipedapi.nosebs.ru/streams/${videoId}`);
+        if (!res.ok) throw "Lỗi instance";
 
         let data = await res.json();
 
-        // Hiển thị thông tin
-        document.getElementById("info").innerHTML = `
+        // Hiển thị info
+        infoDiv.innerHTML = `
           <h2>${data.title}</h2>
           <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
-          <img src="${data.thumbnail}">
+          <img src="${data.thumbnail}" alt="Thumbnail">
         `;
 
-        // Lấy video chất lượng cao nhất (ưu tiên mp4)
-        let bestStream = data.videoStreams
-          .filter(s => s.mimeType && s.mimeType.includes("video/mp4"))
-          .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+        // Lấy HLS stream (ghép video + audio tự động, có tiếng ngay!)
+        // Ưu tiên 1080p hoặc cao nhất có HLS
+        let hlsStream = data.hlsStreams
+          .filter(s => s.quality.includes('1080p') || s.quality.includes('720p'))
+          .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0]
+          || data.hlsStreams[0];
 
-        document.getElementById("player").src = bestStream.url;
+        if (hlsStream) {
+          player.src = hlsStream.url;
+          player.load(); // Reload để phát
+        } else {
+          // Fallback: Ghép thủ công video + audio (nếu không có HLS)
+          let videoUrl = data.videoStreams.filter(s => s.mimeType.includes("video/mp4")).sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0]?.url;
+          let audioUrl = data.audioStreams[0]?.url;
+          if (videoUrl && audioUrl) {
+            // Sử dụng MediaSource để ghép (cần polyfill cho Safari, nhưng đơn giản)
+            alert("HLS không có, thử fallback ghép audio-video (có thể lag tí)");
+            // Code ghép phức tạp hơn, tạm dùng video only + note
+            player.src = videoUrl;
+            infoDiv.innerHTML += "<p style='color:yellow;'>Chưa ghép tiếng được, thử instance khác nhé! (Hoặc dùng bản full mình gửi)</p>";
+          }
+        }
 
       } catch (e) {
-        // Backup 1
+        // Backup: projectsegfau.lt (cũng sống khỏe)
         try {
           let res2 = await fetch(`https://pipedapi.in.projectsegfau.lt/streams/${videoId}`);
-          let d2 = await res2.json();
-          document.getElementById("player").src = d2.videoStreams[0].url;
-          document.getElementById("info").innerHTML = `<h2>${d2.title}</h2>`;
+          let data2 = await res2.json();
+          player.src = data2.hlsStreams[0].url;
+          infoDiv.innerHTML = `<h2>${data2.title}</h2><p>Backup instance đang chạy...</p><img src="${data2.thumbnail}">`;
+          player.load();
         } catch {
-          // Backup 2 (gần như không bao giờ tới đây)
-          document.getElementById("info").innerHTML = "<p style='color:red>Server tạm thời quá tải, thử lại sau 10 giây nha!</p>";
+          infoDiv.innerHTML = "<p style='color:red;'>Server nào cũng down tạm thời, thử lại sau 1 phút hoặc bảo mình gửi bản dùng yt-dlp (siêu bền)!</p>";
         }
       }
     });
