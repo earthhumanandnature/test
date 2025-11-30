@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo – Embed Proxy 2025 (Có Tiếng Mượt)</title>
+  <title>YouTube Không Quảng Cáo – Proxy Sống Khỏe 2025 (Có Tiếng Mượt)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0;background:#000;color:#fff;font-family:system-ui;padding:15px;}
@@ -12,12 +12,13 @@
     img {width:100%;border-radius:12px;margin-top:15px;}
     h1 {text-align:center;color:#ff6b6b;}
     #loading {text-align:center;color:#aaa;}
+    .fallback {color:#4a90e2;text-align:center;}
   </style>
 </head>
 <body>
-  <h1>YouTube Không Quảng Cáo (Proxy Embed)</h1>
+  <h1>YouTube Không Quảng Cáo (Proxy Embed Mới)</h1>
   <input type="text" id="url" placeholder="Dán link YouTube rồi Enter..." autofocus>
-  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy web free không ads)</div></div>
+  <div id="info"><div id="loading">Dán link là xem ngay, có tiếng luôn! (Proxy sống khỏe 2025)</div></div>
   <iframe id="player" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
 
   <script>
@@ -35,30 +36,30 @@
       const id = match[1];
       info.innerHTML = "<p id='loading'>Đang tải video + tiếng… (2–3 giây)</p>";
 
-      // Proxy embed siêu bền 2025: YouTubeUnblocked (free, no ads, có tiếng, no CORS)
-      // Fallback: GenMirror nếu cái đầu lag (cũng free, SSL secure)
+      // Proxy sống khỏe nhất 2025 (test 30/11/2025)
       const proxyUrls = [
-        `https://www.youtubeunblocked.live/embed/${id}`,  // Proxy 1: Nhanh, giống YouTube thật
-        `https://www.genmirror.com/embed/${id}`  // Proxy 2: Backup, no ads, bandwidth tiết kiệm
+        `https://www.genmirror.com/embed/${id}`,  // Proxy 1: GenMirror (SSL, no ads, có tiếng OK)
+        `https://www.blockaway.net/embed/${id}`,   // Proxy 2: BlockAway (free, unblock YouTube tốt)
+        `https://proxysite.pro/#/https://www.youtube.com/watch?v=${id}`  // Proxy 3: Proxysite.pro (streaming support, fallback)
       ];
 
       let currentIndex = 0;
       function loadProxy() {
         const proxyUrl = proxyUrls[currentIndex];
         player.src = proxyUrl;
-        info.innerHTML += `<p>Xem qua proxy: <a href="${proxyUrl}" target="_blank" style="color:#4a90e2;">Mở tab mới nếu lag</a></p>`;
+        info.innerHTML += `<p>Xem qua proxy: <a href="${proxyUrl}" target="_blank" class="fallback">Mở tab mới nếu lag</a></p>`;
       }
 
       loadProxy();  // Load proxy đầu tiên
 
-      // Nếu player load fail (hiếm), thử proxy thứ 2 sau 5s
+      // Nếu player load fail, thử proxy tiếp theo sau 5s
       player.addEventListener("error", () => {
         if (currentIndex < proxyUrls.length - 1) {
           currentIndex++;
           info.innerHTML = "<p style='color:yellow'>Proxy 1 lag, thử proxy 2...</p>";
-          loadProxy();
+          setTimeout(loadProxy, 2000);
         } else {
-          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử lại sau 1 phút nha!</p>";
+          info.innerHTML = "<p style='color:#ff5555'>Proxy lag tạm thời, thử VPN hoặc NewPipe app nha!</p>";
         }
       });
     });
