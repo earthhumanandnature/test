@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Thiệp 20/11 + YouTube Không Quảng Cáo</title>
+  <title>Thiệp</title>
   <style>
     body { margin:0; overflow:hidden; background:#000; touch-action:none; }
     #info { position:absolute; top:10px; left:10px; color:#fff; padding:10px 15px;
             background:rgba(0,0,0,0.7); border-radius:8px; font-family:Arial;
             pointer-events:none; z-index:100; font-size:14px; }
     #flash { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; opacity:0;
-              pointer-events:none; transition:opacity 2.8s ease-out; z-index:9998; }
+              pointer-events:none; transition:opacity 2.css ease-out; z-index:9998; }
     #card {
       position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
       width:90%; max-width:520px; padding:40px 20px; box-sizing:border-box;
@@ -26,7 +26,6 @@
                -webkit-background-clip:text; color:transparent; }
     #card p { font-size:20px; line-height:1.6; margin:15px 0; }
 
-    /* YouTube Section – Đẹp & Sạch */
     #youtubeSection { margin-top:50px; }
     #youtubeSection h2 { font-size:28px; margin:20px 0 10px; color:#ff79c6; }
     #ytInput { width:100%; padding:16px; font-size:18px; border:none; border-radius:12px;
@@ -49,12 +48,10 @@
     </div>
   </div>
 
-  <!-- THREE.JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <script>
-    // ================== TOÀN BỘ 3D VŨ TRỤ (giữ nguyên 100%) ==================
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
     const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -65,14 +62,14 @@
     controls.enableDamping = true; controls.dampingFactor = 0.05; controls.enablePan = false;
     camera.position.set(0, 600, 1800);
 
-    // Stars + Nebula + Sun + Planets + Trails + Moon + Shooting stars
-    // (toàn bộ code 3D bạn gửi trước đó – mình giữ nguyên 100%, chỉ rút gọn comment cho gọn)
+    // Stars
     const starGeo = new THREE.BufferGeometry();
     const vertices = [];
     for(let i=0;i<40000;i++) vertices.push(THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000),THREE.MathUtils.randFloatSpread(10000));
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:true,transparent:true,opacity:0.9})));
 
+    // Nebula
     const nebulaGroup = new THREE.Group(); scene.add(nebulaGroup);
     for(let l=0;l<3;l++){
       const size = 2500 + l*1000;
@@ -97,11 +94,13 @@
       nebulaGroup.add(m);
     }
 
+    // Sun
     const sun = new THREE.Mesh(new THREE.SphereGeometry(70,64,64), new THREE.MeshBasicMaterial({color:0xffee88}));
     sun.add(new THREE.Mesh(new THREE.SphereGeometry(110,32,32), new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0.6})));
     scene.add(sun);
     sun.add(new THREE.PointLight(0xffffff,3,6000));
 
+    // Planets + Moon + Trails
     const planetData = [{name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},{name:"Venus",r:18,dist:280,color:0xffe4b5,period:8},
       {name:"Earth",r:20,dist:400,color:0x2288ff,period:12},{name:"Mars",r:14,dist:550,color:0xff4444,period:18},
       {name:"Jupiter",r:55,dist:900,color:0xf4a460,period:25},{name:"Saturn",r:48,dist:1300,color:0xd2b48c,period:28},
@@ -113,14 +112,17 @@
       const orbit = new THREE.Object3D();
       orbit.add(planet); planet.position.x = p.dist; scene.add(orbit);
       if(p.name==="Earth") earthMesh = planet;
+
       if(p.name==="Saturn"){
         const ring = new THREE.Mesh(new THREE.TorusGeometry(p.r*1.7,p.r*0.4,16,120),
           new THREE.MeshBasicMaterial({color:0xdeb887,side:THREE.DoubleSide,transparent:true,opacity:0.9}));
         ring.rotation.x = Math.PI/2; planet.add(ring);
       }
+
       const trail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:p.color,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending}));
       scene.add(trail);
       trails.push({orbit,planet,trail,positions:[],maxPoints:500,period:p.period});
+
       if(p.name==="Earth"){
         const moon = new THREE.Mesh(new THREE.SphereGeometry(6,24,24), new THREE.MeshStandardMaterial({color:0xdddddd,emissive:0xdddddd,emissiveIntensity:0.3}));
         moon.position.x = 50; planet.add(moon);
@@ -130,18 +132,21 @@
       }
     });
 
+    // SAO BĂNG ĐÃ TRỞ LẠI ĐẸP LUNG LINH
     const shootingStars = [];
     function createShootingStar(){
-      const points = []; for(let i=0;i<200;i++) points.push(new THREE.Vector3());
+      const points = [];
+      for(let i=0;i<200;i++) points.push(new THREE.Vector3());
       const geo = new THREE.BufferGeometry().setFromPoints(points);
       const mat = new THREE.PointsMaterial({color:0xccffff,size:20,sizeAttenuation:true,transparent:true,blending:THREE.AdditiveBlending});
-      const star = new THREE.Points(geo, mat); scene.add(star);
+      const star = new THREE.Points(geo, mat);
+      scene.add(star);
       const dir = new THREE.Vector3(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5).normalize();
       shootingStars.push({obj:star, pos:dir.clone().multiplyScalar(-5500), dir, speed:40+Math.random()*35, life:0, maxLife:160});
     }
-    setInterval(()=>{ if(Math.random()<0.8) createShootingStar(); }, 3500);
+    setInterval(()=>{ if(Math.random()<0.85) createShootingStar(); }, 3000);
 
-    // ================== MỞ THIỆP KHI BẤM TRÁI ĐẤT ==================
+    // Mở thiệp khi bấm Trái Đất
     let triggered = false;
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -168,23 +173,23 @@
     window.addEventListener('click', onPointer);
     window.addEventListener('touchstart', onPointer);
 
-    // ================== YOUTUBE SIÊU SẠCH – CHỈ DÙNG SKIPCUT ==================
+    // YouTube siêu sạch – chỉ dùng SkipCut
     const ytInput = document.getElementById("ytInput");
     const ytPlayer = document.getElementById("ytPlayer");
-
     ytInput.addEventListener("change", () => {
       let url = ytInput.value.trim();
       if (!url) return;
       const match = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
-      if (!match) return alert("Link YouTube không hợp lệ nha!");
-      const id = match[1];
-      ytPlayer.src = `https://skipcut.com/watch?v=${id}`;
+      if (!match) return alert("Link YouTube không hợp lệ!");
+      ytPlayer.src = `https://skipcut.com/watch?v=${match[1]}`;
     });
 
-    // ================== ANIMATION LOOP ==================
+    // Animation loop – có sao băng đầy đủ
     function animate(){
       if(triggered) return;
       requestAnimationFrame(animate);
+
+      // Vệt sáng hành tinh
       trails.forEach(t => {
         t.orbit.rotation.y += (Math.PI*2)/(t.period*60);
         const pos = t.planet.getWorldPosition(new THREE.Vector3());
@@ -192,7 +197,26 @@
         if(t.positions.length > t.maxPoints*3) t.positions.splice(0,3);
         t.trail.geometry.setAttribute('position', new THREE.Float32BufferAttribute(t.positions,3));
       });
-      shootingStars.forEach((s,i) => { /* ... giữ nguyên ... */ });
+
+      // Sao băng chạy mượt
+      for(let i=shootingStars.length-1; i>=0; i--){
+        const s = shootingStars[i]; s.life++;
+        const pos = s.obj.geometry.attributes.position.array;
+        for(let j=0; j<pos.length; j+=3){
+          const prog = j/3/(pos.length/3-1);
+          const v = s.pos.clone().addScaledVector(s.dir, (s.life - prog*160)*s.speed);
+          pos[j]=v.x; pos[j+1]=v.y; pos[j+2]=v.z;
+        }
+        s.obj.geometry.attributes.position.needsUpdate = true;
+        s.obj.material.opacity = Math.max(0, 1 - s.life/s.maxLife);
+        if(s.life > s.maxLife){
+          scene.remove(s.obj);
+          s.obj.geometry.dispose();
+          s.obj.material.dispose();
+          shootingStars.splice(i,1);
+        }
+      }
+
       sun.rotation.y += 0.006;
       nebulaGroup.children.forEach((n,i)=>{ n.material.uniforms.time.value=performance.now()*0.001; n.rotation.y+=0.00004*(i+1); });
       controls.update();
