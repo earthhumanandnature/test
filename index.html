@@ -2,56 +2,69 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>YouTube Không Quảng Cáo</title>
+  <title>YouTube Không Quảng Cáo – Dán Link Là Xem Ngay</title>
   <style>
-    body{background:#111;color:#fff;font-family:Arial,sans-serif;margin:0;padding:20px;}
-    input{padding:16px;font-size:18px;width:100%;border:none;border-radius:8px;margin-bottom:20px;}
-    #player{width:100%;max-height:80vh;border-radius:0;border-radius:12px;}
-    #info{padding:15px;background:#1a1a1a;border-radius:12px;margin:10px 0;}
-    img{max-width:100%;border-radius:12px;}
+    body {background:#000;color:#fff;font-family:Arial,sans-serif;margin:0;padding:15px;}
+    input {padding:16px;font-size:18px;width:100%;border:none;border-radius:12px;margin-bottom:15px;background:#222;color:white;}
+    #info {padding:15px;background:#111;border-radius:12px;margin:10px 0;}
+    #player {width:100%;max-height:80vh;border-radius:12px;background:#000;}
+    h2 {margin:0 0 10px 0;}
+    img {max-width:100%;border-radius:12px;margin-top:10px;}
   </style>
 </head>
 <body>
-  <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi nhấn Enter">
+  <input type="text" id="url" placeholder="Dán link YouTube vào đây rồi nhấn Enter" autofocus>
   <div id="info"></div>
   <video id="player" controls autoplay playsinline></video>
 
   <script>
     document.getElementById("url").addEventListener("change", async () => {
-      let url = document.getElementById("url").value.trim();
-      if (!url) return;
+      let input = document.getElementById("url").value.trim();
+      if (!input) return;
 
-      let m = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/)([^&?\/]+)/);
-      if (!m) return alert("Link YouTube không hợp lệ");
-      let videoId = m[1];
+      // Lấy video ID
+      let match = input.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/|\/live\/|\/)([a-zA-Z0-9_-]{11})/);
+      if (!match) return alert("Link không hợp lệ bro");
+      let videoId = match[1];
+
+      // Xóa nội dung cũ
+      document.getElementById("info").innerHTML = "<p>Đang tải video…</p>";
+      document.getElementById("player").src = "";
 
       try {
+        // Instance chính (rất nhanh)
         let res = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-        if (!res.ok) throw "API lỗi";
-        let d = await res.json();
+        if (!res.ok) throw "Lỗi";
 
+        let data = await res.json();
+
+        // Hiển thị thông tin
         document.getElementById("info").innerHTML = `
-          <h2>${d.title || "Không có tiêu đề"}</h2>
-          <p>${d.uploader} • ${d.uploadDate} • ${Number(d.views || 0).toLocaleString()} lượt xem</p>
-          <img src="${d.thumbnail}">
+          <h2>${data.title}</h2>
+          <p>${data.uploader} • ${data.uploadDate} • ${Number(data.views || 0).toLocaleString()} lượt xem</p>
+          <img src="${data.thumbnail}">
         `;
 
-        // Lấy link chất lượng cao nhất
-        let best = d.videoStreams
-          .filter(s => s.mimeType && s.mimeType.includes("mp4"))
-          .sort((a,b) => (b.bitrate || 0) - (a.bitrate || 0))[0))[0];
+        // Lấy video chất lượng cao nhất (ưu tiên mp4)
+        let bestStream = data.videoStreams
+          .filter(s => s.mimeType && s.mimeType.includes("video/mp4"))
+          .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
 
-        document.getElementById("player").src = best.url;
+        document.getElementById("player").src = bestStream.url;
 
       } catch (e) {
-        // Nếu instance chính chết → tự động chuyển sang instance khác
-        let backup = `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`;
-        let res2 = await fetch(backup);
-        let d2 = await res2.json();
-        document.getElementById("player").src = d2.videoStreams[0].url;
-        document.getElementById("info").innerHTML = `<h2>${d2.title}</h2>`;
+        // Backup 1
+        try {
+          let res2 = await fetch(`https://pipedapi.in.projectsegfau.lt/streams/${videoId}`);
+          let d2 = await res2.json();
+          document.getElementById("player").src = d2.videoStreams[0].url;
+          document.getElementById("info").innerHTML = `<h2>${d2.title}</h2>`;
+        } catch {
+          // Backup 2 (gần như không bao giờ tới đây)
+          document.getElementById("info").innerHTML = "<p style='color:red>Server tạm thời quá tải, thử lại sau 10 giây nha!</p>";
+        }
       }
     });
   </script>
 </body>
-</html> 
+</html>
