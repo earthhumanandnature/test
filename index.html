@@ -139,6 +139,17 @@
     sun.add(new THREE.PointLight(0xffffff,3,6000));
     hoverableObjects.push(sun);
 
+    // Sun Core (lõi mặt trời)
+    const sunCore = new THREE.Mesh(
+      new THREE.SphereGeometry(25, 32, 32),  // Sphere bán kính 25, 32 segments
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,              // Màu trắng
+        emissive: 0xffff00,           // Phát sáng màu vàng
+        emissiveIntensity: 2          // Độ sáng x2
+      })
+    );
+    sun.add(sunCore);  // Thêm lõi vào bên trong mặt trời
+
     // Planets
     const planetData = [
       {name:"Mercury",r:12,dist:180,color:0xcccccc,period:4},
@@ -324,5 +335,6 @@
   </script>
 </body>
 </html>
+
 
 
